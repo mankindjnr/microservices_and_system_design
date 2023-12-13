@@ -1,4 +1,5 @@
 import os, json, gridfs, pika
+from flask import Flask, request
 from flask_pymongo import PyMongo
 from auth import validate
 from auth_svc import access
@@ -13,3 +14,42 @@ fs = gridfs.GridFS(mongo.db)
 
 connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
 channel = connection.channel()
+
+@server.route("/login", methods=["POST"])
+def login():
+    token, err = access.login(request)
+
+    if not err:
+        return token
+    else:
+        return err
+
+# upload video
+@server.route("/upload", methods=["POST"])
+def upload():
+    access, err = validate(request)
+
+    access = json.loads(access)
+
+    if access["admin"]:
+        # ensure thee  upload of a single file
+        if len(request.files) > 1 or len(request.files) < 1:
+            return "exactly one file required", 400
+
+        for _, f in request.files.items():
+            err = util.upload(f, fs, channel, access) #external upload function
+
+            if err:
+                return err
+
+        return "upload successful", 200
+    else:
+        return "not authorieds", 401
+
+# download video
+@server.route("/download/<filename>", methods=["GET"])
+def download(filename):
+    pass
+
+if __name__ == "__main__":
+    server.run(host="0.0.0.0", port=8080, debug=True)

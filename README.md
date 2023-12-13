@@ -1,5 +1,32 @@
 # microservices architecture and system design (python and kubernetes)
 
+## KEY TERMS
+***
+### Synchronous interservice communication
+- it means that the client will wait for the response from the server before it can continue with the next task.
+    The client service cannot do anything when it is waiting for the response from the server. it is essentially blocked.
+
+    __An example of this in our application will be the _api gateway_ and the _auth_ service, when the user is signing up or logging in so as to use our application, the api gateway will block itself as it awaits the _auth_ service to respond with the jwt token.__ 
+    _This way, only authenticated users will be able to use our application._
+
+### Asynchronous interservice communication
+- it means that the client will not wait for the response from the server before it can continue with the next task.
+    The client service can do other things when it is waiting for the response from the server. it is not blocked.
+    We achieve this by using a message queue.
+
+    Our gatewayy does not communicate directly with our converter service, instead, it puts a message in the queue, the converter service then consumes the message from the queue and then does its job. When the converter service is done, it puts a message in the queue, the notification service then consumes the message from the queue and then does its job.
+
+    __An example of this in our application will be the _api gateway_ and the _video to mp3 converter_ service, when the user uploads a video, the api gateway will not block itself as it awaits the _video to mp3 converter_ service to respond with the converted mp3 file.__
+    _This way, the user can upload multiple videos at the same time._
+
+### Strong consistency
+- it means that the data is always consistent across all services.
+    This is achieved by using a database that supports strong consistency, such as mysql.
+
+### Eventual consistency
+- it means that the data is not always consistent across all services.
+    This is achieved by using a database that supports eventual consistency, such as mongodb.
+***
 We will use the following tools to build this microservice:
 
 1. python
